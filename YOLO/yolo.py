@@ -26,9 +26,10 @@ class yolo(object):
     def draw_prediction(self, img, class_id, confidence, x, y, x_plus_w, y_plus_h):
 
         label = str(self.classes[class_id])
-        color = self.COLORS[class_id]
+        # color = self.COLORS[class_id]
+        color = (0, 0, 255)
 
-        cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 2)  #画框，传参是左上角和右下角
+        cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 30)  #画框，传参是左上角和右下角
         cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     
     def predict(self, image):
