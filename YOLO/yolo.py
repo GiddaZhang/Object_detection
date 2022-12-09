@@ -10,8 +10,9 @@ class yolo(object):
         with open(classes, 'r') as f:
             self.classes = [line.strip() for line in f.readlines()]
         self.COLORS = np.random.uniform(0, 255, size=(len(self.classes), 3))
+        self.COLORS[0] = (0, 0, 255)                  # 把人弄成红的
         # 加载网络
-        self.net = cv2.dnn.readNet(weights, config)   #加载模型
+        self.net = cv2.dnn.readNet(weights, config)   # 加载模型
 
     def get_output_layers(self):
     
@@ -26,11 +27,10 @@ class yolo(object):
     def draw_prediction(self, img, class_id, confidence, x, y, x_plus_w, y_plus_h):
 
         label = str(self.classes[class_id])
-        # color = self.COLORS[class_id]
-        color = (0, 0, 255)
+        color = self.COLORS[class_id]
 
-        cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 30)  #画框，传参是左上角和右下角
-        cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 20)  #画框，传参是左上角和右下角
+        cv2.putText(img, label, (x-10, y-15), cv2.FONT_HERSHEY_SIMPLEX, 3, color, 8)
     
     def predict(self, image):
 
@@ -85,12 +85,41 @@ class yolo(object):
             y = box[1]
             w = box[2]
             h = box[3]
-            self.draw_prediction(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))  #画框、标类
+            # self.draw_prediction(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))  #画框、标类
             
             output_class_ids.append(class_ids[i])
             output_confidences.append(confidences[i])
             output_boxes.append(boxes[i])
         
-        return image
-        # return output_class_ids, output_confidences, output_boxes
+        # return image
+        return output_class_ids, output_confidences, output_boxes
+    
+    # 非极大值抑制
+    def nms(img, class_ids, confidences, boxes):
+
+        conf_threshold = 0.5
+        nms_threshold = 0.1
+        #非极大值抑制
+        indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
+        output_class_ids = []
+        output_confidences = []
+        output_boxes = []
+        for i in indices:
+            try:
+                box = boxes[i]
+            except:
+                i = i[0]
+                box = boxes[i]
+            
+            x = box[0]
+            y = box[1]
+            w = box[2]
+            h = box[3]
+            
+            output_class_ids.append(class_ids[i])
+            output_confidences.append(confidences[i])
+            output_boxes.append(boxes[i])
+        
+        return output_class_ids, output_confidences, output_boxes
+
 
