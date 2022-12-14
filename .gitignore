@@ -1,4 +1,5 @@
 *.weights
 *.pyc
+*.jpeg
 *.jpg
 *.pb

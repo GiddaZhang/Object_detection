@@ -70,35 +70,13 @@ class yolo(object):
                     boxes.append([x, y, w, h])
 
         #非极大值抑制
-        indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
-        output_class_ids = []
-        output_confidences = []
-        output_boxes = []
-        for i in indices:
-            try:
-                box = boxes[i]
-            except:
-                i = i[0]
-                box = boxes[i]
-            
-            x = box[0]
-            y = box[1]
-            w = box[2]
-            h = box[3]
-            # self.draw_prediction(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))  #画框、标类
-            
-            output_class_ids.append(class_ids[i])
-            output_confidences.append(confidences[i])
-            output_boxes.append(boxes[i])
-        
-        # return image
-        return output_class_ids, output_confidences, output_boxes
+        return self.nms(class_ids, confidences, boxes, conf_threshold, nms_threshold)
     
     # 非极大值抑制
-    def nms(img, class_ids, confidences, boxes):
+    def nms(self, class_ids, confidences, boxes, conf_threshold=0.5, nms_threshold=0.25):
 
-        conf_threshold = 0.5
-        nms_threshold = 0.1
+        # conf_threshold = 0.5
+        # nms_threshold = 0.1
         #非极大值抑制
         indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
         output_class_ids = []
