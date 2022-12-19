@@ -26,7 +26,8 @@ if __name__ == '__main__':
     img = cv2.imread('test_IMG_14_02.jpg')
     h, w = img.shape[0], img.shape[1]
     num_h, num_w = 7, 7
-    img_blocks = img_proc.img_cut(img, num_h, num_w, 1.1)
+    overlap=1.1
+    img_blocks = img_proc.img_cut(img, num_h, num_w, overlap)
 
     # 把检测结果按各个小块存储
     class_ids, confidences, boxes = [], [], []
@@ -43,16 +44,20 @@ if __name__ == '__main__':
 
     # 检测原图
     origin = draw_predict(img, class_ids, confidences, boxes, Yolo)
-    cv2.imwrite('result/yolo/1.jpg', origin)
+    cv2.imwrite('result1.jpg', origin)
 
     # nms抑制
     class_ids, confidences, boxes = Yolo.nms(class_ids, confidences, boxes)
     after_nms = draw_predict(img, class_ids, confidences, boxes, Yolo)
-    cv2.imwrite('result/yolo/2.jpg', after_nms)
+    cv2.imwrite('result2.jpg', after_nms)
 
     # 合并框
-    # img = cv2.imread('test_IMG_14_02.jpg')
-    # class_ids, confidences, boxes = box_merge(class_ids, confidences, boxes)
-    
+    img = cv2.imread('test_IMG_14_02.jpg')
+    class_ids, confidences, boxes = img_proc.box_merge(img, num_h, num_w, overlap, class_ids, confidences, boxes)
+    class_ids, confidences, boxes = Yolo.nms(class_ids, confidences, boxes)
+    after_merge = draw_predict(img, class_ids, confidences, boxes, Yolo)
+    cv2.imwrite('result3.jpg', after_merge)
+
+
     print((time.time() - start))
     
