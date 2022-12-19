@@ -31,38 +31,7 @@ class ImgProcessor(object):
                 img_blocks.append(img_block)
         return img_blocks
     
-    def box_merge(img, num_h, num_w, overlap, class_ids, confidences, boxes):
-
-        num_blocks = num_h*num_w
-        h, w = img.shape[0], img.shape[1]           # 原图高度，宽度
-        h_block, w_block = h // num_h, w // num_w   # 切割图像高度，宽度
-        h_block_ovlap = round(overlap * h_block)    # 考虑重叠区域后的高度
-        w_block_ovlap = round(overlap * w_block)    # 考虑重叠区域后的宽度
-        blocks_output = []
-
-        for i in range(num_h):
-            for j in range(num_w):
-                # i行j列的块
-                id, conf, box_ = [], [], []
-                # 确定边界
-                y, x = i*h_block, j*w_block
-                for box_idx in range(len(boxes)):
-                    box = boxes[box_idx]
-                    if box[0] >= x and box[0] <= x + w_block_ovlap and box[1] >= y and box[1] <= y + h_block_ovlap:
-                        id.append(class_ids[box_idx])
-                        conf.append(confidences[box_idx])
-                        box_.append(box)
-                        continue
-                blocks_output.append((id,conf,box))
-
-        
-        for i in range(num_blocks):
-            if(i+1>=0)and(i+1<num_blocks):
-                blocks_output[i],blocks_output[i+1]=box_merge_1(blocks_output[i],blocks_output[i+1])
-            if(i+num_w>=0)and(i+num_w<num_blocks):
-                blocks_output[i],blocks_output[i+num_w]=box_merge_1(blocks_output[i],blocks_output[i+num_w])
-
-        def box_merge_1(block_A, block_B):
+    def box_merge_1(self,block_A, block_B):
             #对AB两区域中的boxes逐一比对判断是否合并
             i = 0
             while i < len(block_A[0]):
@@ -73,10 +42,8 @@ class ImgProcessor(object):
                         continue
                     else:  # box的种类相同，计算是否有交集
                         #两角点位置信息储存box
-                        box_A = (block_A[2][i][0], block_A[2][i][1], block_A[2][i]
-                                [0]+block_A[2][i][2], block_A[2][i][1]+block_A[2][i][3])
-                        box_B = (block_B[2][j][0], block_B[2][j][1], block_B[2][j]
-                                [0]+block_B[2][j][2], block_B[2][j][1]+block_B[2][j][3])
+                        box_A = (block_A[2][i][0], block_A[2][i][1], block_A[2][i][0]+block_A[2][i][2], block_A[2][i][1]+block_A[2][i][3])
+                        box_B = (block_B[2][j][0], block_B[2][j][1], block_B[2][j][0]+block_B[2][j][2], block_B[2][j][1]+block_B[2][j][3])
                         #两box面积
                         S_box_A = block_A[2][i][2]*block_A[2][i][3]
                         S_box_B = block_B[2][j][2]*block_B[2][j][3]
@@ -127,4 +94,48 @@ class ImgProcessor(object):
                             j = j+1
                         continue
                 i = i+1
-                return block_A, block_B
+            return block_A, block_B
+
+    def box_merge(self,img, num_h, num_w, overlap, class_ids, confidences, boxes):
+
+        num_blocks = num_h*num_w
+        h, w = img.shape[0], img.shape[1]           # 原图高度，宽度
+        h_block, w_block = h // num_h, w // num_w   # 切割图像高度，宽度
+        h_block_ovlap = round(overlap * h_block)    # 考虑重叠区域后的高度
+        w_block_ovlap = round(overlap * w_block)    # 考虑重叠区域后的宽度
+        blocks_output = []
+        #拆分
+        for i in range(num_h):
+            for j in range(num_w):
+                # i行j列的块
+                id, conf, box_ = [], [], []
+                # 确定边界
+                y, x = i*h_block, j*w_block
+                for box_idx in range(len(boxes)):
+                    box = boxes[box_idx]
+                    if box[0] >= x and box[0] <= x + w_block_ovlap and box[1] >= y and box[1] <= y + h_block_ovlap:
+                        id.append(class_ids[box_idx])
+                        conf.append(confidences[box_idx])
+                        box_.append(box)
+                        continue
+                blocks_output.append((id,conf,box_))
+       
+        #逐个区域合并
+        for i in range(num_blocks):
+            if(i+1>=0)and(i+1<num_blocks):
+                blocks_output[i],blocks_output[i+1]=self.box_merge_1(blocks_output[i],blocks_output[i+1])
+            if(i+num_w>=0)and(i+num_w<num_blocks):
+                blocks_output[i],blocks_output[i+num_w]=self.box_merge_1(blocks_output[i],blocks_output[i+num_w])
+
+        #结果合并
+        # 把检测结果按各个小块存储
+        new_class_ids, new_confidences, new_boxes = [], [], []
+        for i in range(len(blocks_output)):
+            new_class_ids.extend(blocks_output[i][0])
+            new_confidences.extend(blocks_output[i][1])
+            new_boxes.extend(blocks_output[i][2])
+
+        return new_class_ids, new_confidences, new_boxes 
+
+
+ 
