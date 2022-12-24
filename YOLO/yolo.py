@@ -30,9 +30,9 @@ class yolo(object):
         color = self.COLORS[class_id]
 
         cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 20)  #画框，传参是左上角和右下角
-        cv2.putText(img, label, (x-10, y-15), cv2.FONT_HERSHEY_SIMPLEX, 3, color, 8)
+        cv2.putText(img, str(round(confidence,4)), (x-10, y-15), cv2.FONT_HERSHEY_SIMPLEX, 3, color, 8)
     
-    def predict(self, image):
+    def predict(self, image,conf_threshold,nms_threshold):
 
         #图像预处理
         blob = cv2.dnn.blobFromImage(image, self.scale, (416,416), (0,0,0), True, crop=False) 
@@ -46,8 +46,6 @@ class yolo(object):
         class_ids = []     
         confidences = []
         boxes = []
-        conf_threshold = 0.5
-        nms_threshold = 0.4
 
         #网络的输出为矩形框，每个矩形框由一个向量表示，所有矩形框组成一个向量组
         #每个向量的长度为类别数 + 5个参数，
@@ -72,8 +70,9 @@ class yolo(object):
         #非极大值抑制
         return self.nms(class_ids, confidences, boxes, conf_threshold, nms_threshold)
     
+
     # 非极大值抑制
-    def nms(self, class_ids, confidences, boxes, conf_threshold=0.5, nms_threshold=0.25):
+    def nms(self, class_ids, confidences, boxes, conf_threshold, nms_threshold):
 
         # conf_threshold = 0.5
         # nms_threshold = 0.1
