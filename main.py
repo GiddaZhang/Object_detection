@@ -74,7 +74,7 @@ def box_check(class_ids, confidences, boxes):
             new_class_ids.extend(temp_class_ids)
             new_confidences.extend(temp_confidences)
             new_boxes.extend(temp_boxes)
-            
+
     class_ids.extend(new_class_ids)
     confidences.extend(new_confidences)
     boxes.extend(new_boxes)
@@ -155,3 +155,14 @@ if __name__ == '__main__':
 
     print((time.time() - start))
     
+    # 存储结果到json文件
+    json_file_path = 'det_results.json'
+    json_file = open(json_file_path, mode='w')
+    json_content = []
+    for box in boxes:
+        box[0], box[1], box[2], box[3] = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+        json_tmp = {
+            "bbox":box
+        }
+        json_content.append(json_tmp)
+    json.dump(json_content, json_file, indent=4)
