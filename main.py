@@ -156,8 +156,6 @@ if __name__ == '__main__':
     print((time.time() - start))
     
     # 存储结果到json文件
-    json_file_path = 'det_results.json'
-    json_file = open(json_file_path, mode='w')
     json_content = []
     for box in boxes:
         box[0], box[1], box[2], box[3] = int(box[0]), int(box[1]), int(box[2]), int(box[3])
@@ -165,4 +163,7 @@ if __name__ == '__main__':
             "bbox":box
         }
         json_content.append(json_tmp)
-    json.dump(json_content, json_file, indent=4)
+        
+    json_file_path = 'det_results.json'
+    with open(json_file_path, mode='w') as json_file:
+        json.dump(json_content, json_file, indent=4)
